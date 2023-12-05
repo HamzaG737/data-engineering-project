@@ -7,6 +7,7 @@ from datetime import datetime
 from src.kafka_client.kafka_stream_data import stream
 
 
+
 start_date = datetime.today() - timedelta(days=1)
 
 
