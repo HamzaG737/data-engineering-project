@@ -18,6 +18,7 @@ default_args = {
 }
 
 
+
 with DAG(
     dag_id="kafka_spark_dag",
     default_args=default_args,
