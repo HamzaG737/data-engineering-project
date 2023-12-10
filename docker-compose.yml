@@ -22,7 +22,7 @@ services:
     container_name: kafka-ui-1
     image: provectuslabs/kafka-ui:latest
     ports:
-      - 8800:8080 # Changed to avoid port clash with akhq
+      - 8000:8080
     depends_on:
       - kafka
     environment:
