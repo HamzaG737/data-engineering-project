@@ -1,4 +1,6 @@
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import psycopg2
 from src.constants import DB_FIELDS
@@ -24,22 +26,21 @@ def try_execute_sql(sql: str):
         conn.rollback()
 
 
-def alter_table():
-    primary_key_sql = f"""
-    ALTER TABLE rappel_conso
-    ADD PRIMARY KEY (DB_FIELDS[0]);
+def create_table():
+    create_table_sql = f"""
+    CREATE TABLE rappel_conso (
+        {DB_FIELDS[0]} text PRIMARY KEY,
     """
-    try_execute_sql(primary_key_sql)
-    for field in DB_FIELDS[1:]:
-        alter_table_sql = f"""
-        ALTER TABLE rappel_conso
-        ADD COLUMN {field} text;
-        """
-        try_execute_sql(alter_table_sql)
+    for field in DB_FIELDS[1:-1]:
+        column_sql = f"{field} text, \n"
+        create_table_sql += column_sql
+
+    create_table_sql += f"{DB_FIELDS[-1]} text \n" + ");"
+    try_execute_sql(create_table_sql)
 
     cur.close()
     conn.close()
 
 
 if __name__ == "__main__":
-    alter_table()
+    create_table()
