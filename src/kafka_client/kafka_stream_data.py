@@ -17,6 +17,8 @@ import logging
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO, force=True)
 
+#todo change timestamp to the date before last day
+
 
 def get_latest_timestamp():
     """
