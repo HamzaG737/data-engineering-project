@@ -49,7 +49,7 @@ x-airflow-common:
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   build:
     context: .
-    dockerfile: ./airflow/Dockerfile
+    dockerfile: ./airflow_resources/Dockerfile
   image: de-project/airflow:latest
   environment:
     &airflow-common-env
