@@ -73,7 +73,6 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
-    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ./src:/opt/airflow/dags/src
     - ./data/last_processed.json:/opt/airflow/data/last_processed.json
   user: "${AIRFLOW_UID:-50000}:0"
