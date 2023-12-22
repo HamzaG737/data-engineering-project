@@ -71,7 +71,7 @@ def start_streaming(df_parsed, spark):
     """
     # Read existing data from PostgreSQL
     existing_data_df = spark.read.jdbc(
-        POSTGRES_URL, "rappel_conso", properties=POSTGRES_PROPERTIES
+        POSTGRES_URL, "rappel_conso_table", properties=POSTGRES_PROPERTIES
     )
 
     unique_column = "reference_fiche"
@@ -83,7 +83,7 @@ def start_streaming(df_parsed, spark):
                 existing_data_df, batch_df[unique_column] == existing_data_df[unique_column], "leftanti"
             )
             .write.jdbc(
-                POSTGRES_URL, "rappel_conso", "append", properties=POSTGRES_PROPERTIES
+                POSTGRES_URL, "rappel_conso_table", "append", properties=POSTGRES_PROPERTIES
             )
         )
     ).trigger(once=True) \
