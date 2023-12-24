@@ -20,9 +20,9 @@ def try_execute_sql(sql: str):
     try:
         cur.execute(sql)
         conn.commit()
-        print(f"Executed {sql} successfully")
+        print(f"Executed table creation successfully")
     except Exception as e:
-        print(f"Couldn't execute {sql} due to exception: {e}")
+        print(f"Couldn't execute table creation due to exception: {e}")
         conn.rollback()
 
 
