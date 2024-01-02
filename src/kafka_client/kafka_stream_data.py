@@ -1,13 +1,13 @@
-import kafka.errors
-
 from src.constants import (
     URL_API,
     PATH_LAST_PROCESSED,
-    DB_FIELDS,
     MAX_LIMIT,
-    OFFSET_LIMIT,
+    MAX_OFFSET,
 )
 
+from .transformations import transform_row
+
+import kafka.errors
 import json
 import datetime
 import requests
@@ -16,8 +16,6 @@ from typing import List
 import logging
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO, force=True)
-
-#todo change timestamp to the date before last day
 
 
 def get_latest_timestamp():
@@ -34,13 +32,14 @@ def get_latest_timestamp():
 
 def update_last_processed_file(data: List[dict]):
     """
-    Updates the last_processed.json file with the latest timestamp
+    Updates the last_processed.json file with the latest timestamp. Since the comparison is strict
+    on the field date_de_publication, we set the new last_processed day to the latest timestamp minus one day.
     """
     publication_dates_as_timestamps = [
         datetime.datetime.strptime(row["date_de_publication"], "%Y-%m-%d")
         for row in data
     ]
-    last_processed = max(publication_dates_as_timestamps)
+    last_processed = max(publication_dates_as_timestamps) - datetime.timedelta(days=1)
     last_processed_as_string = last_processed.strftime("%Y-%m-%d")
     with open(PATH_LAST_PROCESSED, "w") as file:
         json.dump({"last_processed": last_processed_as_string}, file)
@@ -50,18 +49,28 @@ def get_all_data(last_processed_timestamp: datetime.datetime) -> List[dict]:
     n_results = 0
     full_data = []
     while True:
-        # The publication date must be greater than the last processed timestamp and the offset corresponds to
-        # the number of results already processed
+        # The publication date must be greater than the last processed timestamp and the offset (n_results)
+        # corresponds to the number of results already processed.
         url = URL_API.format(last_processed_timestamp, n_results)
         response = requests.get(url)
         data = response.json()
         current_results = data["results"]
         full_data.extend(current_results)
         n_results += len(current_results)
-        n_results = min(OFFSET_LIMIT, n_results)
         if len(current_results) < MAX_LIMIT:
             break
-    logging.info(f"Got {n_results} results from the API")
+        # The sum of offset + limit API parameter must be lower than 10000.
+        if n_results + MAX_LIMIT >= MAX_OFFSET:
+            # If it is the case, change the last_processed_timestamp parameter to the date_de_publication
+            # of the last retrieved result, minus one day. In case of duplicates, they will be filtered
+            # in the deduplicate_data function. We also reset n_results (or the offset parameter) to 0.
+            last_timestamp = current_results[-1]["date_de_publication"]
+            timestamp_as_date = datetime.datetime.strptime(last_timestamp, "%Y-%m-%d")
+            timestamp_as_date = timestamp_as_date - datetime.timedelta(days=1)
+            last_processed_timestamp = timestamp_as_date.strftime("%Y-%m-%d")
+            n_results = 0
+
+    logging.info(f"Got {len(full_data)} results from the API")
 
     return full_data
 
@@ -86,10 +95,7 @@ def process_data(row):
     """
     Processes the data from the API
     """
-    kafka_data = {}
-    for field in DB_FIELDS:
-        kafka_data[field] = row.get(field, None)
-    return kafka_data
+    return transform_row(row)
 
 
 def create_kafka_producer():
